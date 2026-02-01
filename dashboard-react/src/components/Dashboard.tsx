@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ReferenceLine, ComposedChart, Line } from 'recharts';
-import { Filter, ArrowUp, ArrowDown, Minus, Calendar, Users, Activity, LayoutGrid, PieChart, TrendingUp, Check, AlertCircle } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ComposedChart, Line } from 'recharts';
+import { Filter, ArrowUp, ArrowDown, Calendar, Users, Activity, LayoutGrid, AlertCircle } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Agendamento {
