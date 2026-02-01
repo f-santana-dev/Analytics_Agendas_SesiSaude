@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ComposedChart, Line } from 'recharts';
 import { Filter, ArrowUp, ArrowDown, Calendar, Users, Activity, LayoutGrid, AlertCircle, Check, Minus, TrendingUp, Download } from 'lucide-react';
+import { utils, writeFile } from 'xlsx';
 import clsx from 'clsx';
 
 interface Agendamento {
@@ -396,29 +397,37 @@ export const Dashboard: React.FC = () => {
       : <ArrowDown className="w-3 h-3 ml-1 text-[#F39C45]" />;
   };
 
-  const downloadCSV = () => {
-    const headers = ['Especialidade', 'Total', 'Realizados', 'Bloqueados', 'Ocupacao (%)', 'Absenteismo (%)'];
-    const csvContent = [
-      headers.join(','),
-      ...specialtiesTableData.map((row: any) => [
-        `"${row.name}"`,
-        row.total,
-        row.REALIZADO,
-        row.BLOQUEADO,
-        row.ocupacao.toFixed(1),
-        row.absenteismo.toFixed(1)
-      ].join(','))
-    ].join('\n');
+  const downloadExcel = () => {
+    // Prepara os dados
+    const dataToExport = specialtiesTableData.map((row: any) => ({
+        'Especialidade': row.name,
+        'Total': row.total,
+        'Realizados': row.REALIZADO,
+        'Bloqueados': row.BLOQUEADO,
+        'Ocupação (%)': `${row.ocupacao.toFixed(1)}%`,
+        'Absenteísmo (%)': `${row.absenteismo.toFixed(1)}%`
+    }));
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'ranking_especialidades.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Cria a planilha (Worksheet)
+    const ws = utils.json_to_sheet(dataToExport);
+
+    // Ajusta largura das colunas
+    const wscols = [
+        {wch: 30}, // Especialidade
+        {wch: 10}, // Total
+        {wch: 12}, // Realizados
+        {wch: 12}, // Bloqueados
+        {wch: 15}, // Ocupação
+        {wch: 15}  // Absenteísmo
+    ];
+    ws['!cols'] = wscols;
+
+    // Cria o arquivo (Workbook)
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Ranking");
+
+    // Salva
+    writeFile(wb, "Ranking_Especialidades.xlsx");
   };
 
   if (loading) return <div className="flex h-screen items-center justify-center bg-[#0B1E3B] text-white animate-pulse">Carregando Dashboard...</div>;
@@ -614,8 +623,8 @@ export const Dashboard: React.FC = () => {
                         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
                             <Activity className="w-3.5 h-3.5 text-[#F39C45]" /> Ranking de Especialidades
                         </h3>
-                        <button onClick={downloadCSV} className="p-1 hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-white" title="Exportar CSV">
-                            <Download className="w-3.5 h-3.5" />
+                        <button onClick={downloadExcel} className="p-1.5 bg-slate-700/50 hover:bg-[#F39C45] rounded-md transition-colors text-white" title="Baixar Excel">
+                            <Download className="w-4 h-4" />
                         </button>
                     </div>
                     <div className="flex-1 overflow-auto custom-scrollbar">
