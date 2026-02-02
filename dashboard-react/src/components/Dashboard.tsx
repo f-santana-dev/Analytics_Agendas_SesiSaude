@@ -512,7 +512,7 @@ export const Dashboard: React.FC = () => {
                 <h2 className="text-xl font-bold text-white tracking-tight">Visão Geral</h2>
                 <div className="flex items-center gap-2 text-xs text-slate-400">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Dados atualizados em tempo real
+                    Periodo de 01/01/2026 a 31/01/2026
                 </div>
             </div>
             
