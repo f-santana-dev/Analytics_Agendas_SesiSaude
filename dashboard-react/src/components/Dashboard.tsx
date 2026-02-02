@@ -119,6 +119,7 @@ export const Dashboard: React.FC = () => {
 
   // Table Sorting State
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total', direction: 'desc' });
+  const [customTooltip, setCustomTooltip] = useState<{ visible: boolean, x: number, y: number, content: string }>({ visible: false, x: 0, y: 0, content: '' });
 
   const handleSort = (key: string) => {
     setSortConfig(current => ({
@@ -332,11 +333,15 @@ export const Dashboard: React.FC = () => {
       }, {} as any);
 
       return Object.values(grouped)
-          .map((item: any) => ({
-              ...item,
-              daysCount: item.days.size,
-              daysList: Array.from(item.days).sort().slice(0, 3).map((d: any) => d.split('-').reverse().join('/')).join(', ') + (item.days.size > 3 ? '...' : '') // Show first 3 days
-          }))
+          .map((item: any) => {
+              const sortedDays = Array.from(item.days).sort();
+              return {
+                  ...item,
+                  daysCount: item.days.size,
+                  daysList: sortedDays.slice(0, 3).map((d: any) => (d as string).split('-').reverse().join('/')).join(', ') + (item.days.size > 3 ? '...' : ''), // Show first 3 days
+                  fullDaysList: sortedDays.map((d: any) => (d as string).split('-').reverse().join('/')).join(', ')
+              };
+          })
           .sort((a: any, b: any) => b.count - a.count)
           .slice(0, 5); // Top 5 blockers
   }, [filteredData]);
@@ -694,9 +699,9 @@ export const Dashboard: React.FC = () => {
                             <thead className="sticky top-0 bg-[#0F2645] z-10">
                                 <tr>
                                     <th className="py-1">Profissional</th>
-                                    <th className="text-right py-1">Bloqueios</th>
-                                    <th className="text-right py-1">Dias</th>
-                                    <th className="text-right py-1">Datas</th>
+                                    <th className="text-right py-1">Quantidade Bloqueios</th>
+                                    <th className="text-right py-1">Dias com Bloqueios</th>
+                                    <th className="text-right py-1">Datas com Bloqueios</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -705,7 +710,14 @@ export const Dashboard: React.FC = () => {
                                         <td className="font-medium text-slate-200 py-1.5">{p.name}</td>
                                         <td className="text-right text-rose-400 font-bold py-1.5">{p.count}</td>
                                         <td className="text-right text-slate-400 py-1.5">{p.daysCount}</td>
-                                        <td className="text-right text-slate-500 text-[9px] py-1.5">{p.daysList}</td>
+                                        <td 
+                                            className="text-right text-slate-500 text-[9px] py-1.5 cursor-help"
+                                            onMouseEnter={(e) => setCustomTooltip({ visible: true, x: e.clientX, y: e.clientY, content: p.fullDaysList })}
+                                            onMouseMove={(e) => setCustomTooltip(prev => ({ ...prev, x: e.clientX, y: e.clientY }))}
+                                            onMouseLeave={() => setCustomTooltip(prev => ({ ...prev, visible: false }))}
+                                        >
+                                            {p.daysList}
+                                        </td>
                                     </tr>
                                 ))}
                                 {blockedProfessionalsData.length === 0 && (
@@ -718,6 +730,23 @@ export const Dashboard: React.FC = () => {
             </div>
         </div>
       </main>
+
+      {/* Custom Tooltip Portal-like */}
+      {customTooltip.visible && (
+        <div 
+            className="fixed z-50 p-3 bg-[#020617] border border-slate-800 rounded-xl shadow-2xl text-xs text-slate-200 pointer-events-none max-w-xs"
+            style={{ 
+                top: customTooltip.y - 15, 
+                left: Math.min(customTooltip.x + 15, window.innerWidth - 320), // Prevent overflow right
+                transform: 'translateY(-100%)'
+            }}
+        >
+            <div className="font-bold mb-2 text-[#F39C45] text-[10px] uppercase tracking-wider">Datas com Bloqueios</div>
+            <div className="leading-relaxed text-slate-300 break-words">
+                {customTooltip.content}
+            </div>
+        </div>
+      )}
     </div>
   );
 };
